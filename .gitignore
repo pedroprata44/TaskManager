@@ -47,7 +47,9 @@ local.settings.json
 
 # Test coverage & analysis
 coverage/
+coveragereport/
 *.coverage
+*.cobertura.xml
 
 # Database files
 taskmanager.db
