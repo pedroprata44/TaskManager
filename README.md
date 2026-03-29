@@ -210,18 +210,6 @@ Copy the returned token and add it to subsequent requests in the `Authorization`
 - Supports Entity Framework Core connection strings for any EF Core provider (SQL Server, PostgreSQL, MySQL, etc.)
 - Modify `ConnectionStrings:DefaultConnection` in `appsettings.json`
 
-## Deployment Checklist
-
-- [ ] Update JWT Key for production (use Azure Key Vault, AWS Secrets Manager, or similar)
-- [ ] Enable CORS for frontend origin
-- [ ] Add input validation (FluentValidation recommended)
-- [ ] Implement rate limiting
-- [ ] Add request logging (Serilog recommended)
-- [ ] Configure production database (SQL Server or PostgreSQL recommended)
-- [ ] Enable HTTPS only
-- [ ] Implement health check endpoints
-- [ ] Add OpenAPI/Swagger documentation
-
 ## Contributing
 
 Contributions are welcome! Follow these steps:
