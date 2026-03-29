@@ -1,0 +1,78 @@
+# .NET
+**/bin/
+**/obj/
+**/TestResults/
+**/publish/
+*.dbmdl
+*.pdb
+*.dll
+*.exe
+*.log
+*.tmp
+*.user
+*.suo
+*.tss
+*.vsp
+*.vspscc
+*.etl
+
+# .NET Core / .NET 5+
+.dotnet/
+tools/
+artifacts/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# Visual Studio / IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Configuration (instance-specific)
+appsettings.Development.json
+appsettings.*.local.json
+local.settings.json
+*.local
+.env
+.env.local
+.env.*.local
+
+# Test coverage & analysis
+coverage/
+*.coverage
+*.coveragexml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Cache
+.nuget/
+packages/
+
+# Node artifacts (frontend)
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.turbo/
+
+# Build output
+dist/
+build/
+
+# Temporary
+*~
+
+# lock files can be committed if desired, not ignored in general
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
