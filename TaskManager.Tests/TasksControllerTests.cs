@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using TaskManager.Api.Controllers;
@@ -15,11 +17,28 @@ namespace TaskManager.Tests
     {
         private readonly Mock<ITaskService> _mockTaskService;
         private readonly TasksController _controller;
+        private readonly Guid _testUserId;
 
         public TasksControllerTests()
         {
             _mockTaskService = new Mock<ITaskService>();
             _controller = new TasksController(_mockTaskService.Object);
+            _testUserId = Guid.NewGuid();
+            SetupAuthenticatedUser();
+        }
+
+        private void SetupAuthenticatedUser()
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, _testUserId.ToString()),
+                new Claim(ClaimTypes.Name, "testuser"),
+                new Claim(ClaimTypes.Email, "test@example.com")
+            };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var principal = new ClaimsPrincipal(identity);
+            var httpContext = new DefaultHttpContext { User = principal };
+            _controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
         }
 
         #region GetAll Tests
@@ -29,24 +48,24 @@ namespace TaskManager.Tests
             // Arrange
             var tasks = new List<TaskItem>
             {
-                new TaskItem { Id = Guid.NewGuid(), Title = "Task 1", Status = TaskItemStatus.Todo },
-                new TaskItem { Id = Guid.NewGuid(), Title = "Task 2", Status = TaskItemStatus.InProgress }
+                new TaskItem { Id = Guid.NewGuid(), Title = "Task 1", Status = TaskItemStatus.Todo, UserId = _testUserId },
+                new TaskItem { Id = Guid.NewGuid(), Title = "Task 2", Status = TaskItemStatus.InProgress, UserId = _testUserId }
             };
-            _mockTaskService.Setup(s => s.GetAllAsync()).ReturnsAsync(tasks);
+            _mockTaskService.Setup(s => s.GetAllAsync(_testUserId)).ReturnsAsync(tasks);
 
             // Act
             var result = await _controller.GetAll();
 
             // Assert
             result.Should().HaveCount(2);
-            _mockTaskService.Verify(s => s.GetAllAsync(), Times.Once);
+            _mockTaskService.Verify(s => s.GetAllAsync(_testUserId), Times.Once);
         }
 
         [Fact]
         public async Task GetAll_WhenNoTasks_ReturnsEmptyCollection()
         {
             // Arrange
-            _mockTaskService.Setup(s => s.GetAllAsync()).ReturnsAsync(new List<TaskItem>());
+            _mockTaskService.Setup(s => s.GetAllAsync(_testUserId)).ReturnsAsync(new List<TaskItem>());
 
             // Act
             var result = await _controller.GetAll();
@@ -68,9 +87,10 @@ namespace TaskManager.Tests
                 Title = "Test Task",
                 Description = "Test Description",
                 Status = TaskItemStatus.Todo,
-                Priority = TaskItemPriority.High
+                Priority = TaskItemPriority.High,
+                UserId = _testUserId
             };
-            _mockTaskService.Setup(s => s.GetByIdAsync(taskId)).ReturnsAsync(task);
+            _mockTaskService.Setup(s => s.GetByIdAsync(taskId, _testUserId)).ReturnsAsync(task);
 
             // Act
             var result = await _controller.GetById(taskId);
@@ -79,7 +99,7 @@ namespace TaskManager.Tests
             result.Result.Should().BeOfType<OkObjectResult>();
             var okResult = result.Result as OkObjectResult;
             okResult?.Value.Should().Be(task);
-            _mockTaskService.Verify(s => s.GetByIdAsync(taskId), Times.Once);
+            _mockTaskService.Verify(s => s.GetByIdAsync(taskId, _testUserId), Times.Once);
         }
 
         [Fact]
@@ -87,14 +107,15 @@ namespace TaskManager.Tests
         {
             // Arrange
             var taskId = Guid.NewGuid();
-            _mockTaskService.Setup(s => s.GetByIdAsync(taskId)).ReturnsAsync((TaskItem?)null);
+            _mockTaskService.Setup(s => s.GetByIdAsync(taskId, _testUserId))
+                .ThrowsAsync(new UnauthorizedAccessException("Not authorized"));
 
             // Act
             var result = await _controller.GetById(taskId);
 
             // Assert
             result.Result.Should().BeOfType<NotFoundResult>();
-            _mockTaskService.Verify(s => s.GetByIdAsync(taskId), Times.Once);
+            _mockTaskService.Verify(s => s.GetByIdAsync(taskId, _testUserId), Times.Once);
         }
         #endregion
 
@@ -116,6 +137,7 @@ namespace TaskManager.Tests
                 Description = newTask.Description,
                 Priority = newTask.Priority,
                 Status = TaskItemStatus.Todo,
+                UserId = _testUserId,
                 CreatedAt = DateTime.UtcNow
             };
             _mockTaskService.Setup(s => s.CreateAsync(It.IsAny<TaskItem>())).ReturnsAsync(createdTask);
@@ -163,9 +185,10 @@ namespace TaskManager.Tests
                 Title = updateTask.Title,
                 Description = updateTask.Description,
                 Priority = updateTask.Priority,
-                Status = TaskItemStatus.Todo
+                Status = TaskItemStatus.Todo,
+                UserId = _testUserId
             };
-            _mockTaskService.Setup(s => s.UpdateAsync(taskId, It.IsAny<TaskItem>())).ReturnsAsync(updatedTask);
+            _mockTaskService.Setup(s => s.UpdateAsync(taskId, It.IsAny<TaskItem>(), _testUserId)).ReturnsAsync(updatedTask);
 
             // Act
             var result = await _controller.Update(taskId, updateTask);
@@ -174,7 +197,7 @@ namespace TaskManager.Tests
             result.Result.Should().BeOfType<OkObjectResult>();
             var okResult = result.Result as OkObjectResult;
             okResult?.Value.Should().Be(updatedTask);
-            _mockTaskService.Verify(s => s.UpdateAsync(taskId, It.IsAny<TaskItem>()), Times.Once);
+            _mockTaskService.Verify(s => s.UpdateAsync(taskId, It.IsAny<TaskItem>(), _testUserId), Times.Once);
         }
 
         [Fact]
@@ -183,7 +206,7 @@ namespace TaskManager.Tests
             // Arrange
             var taskId = Guid.NewGuid();
             var updateTask = new TaskItem { Title = "Updated" };
-            _mockTaskService.Setup(s => s.UpdateAsync(taskId, It.IsAny<TaskItem>()))
+            _mockTaskService.Setup(s => s.UpdateAsync(taskId, It.IsAny<TaskItem>(), _testUserId))
                 .ThrowsAsync(new KeyNotFoundException("Task not found"));
 
             // Act
@@ -199,7 +222,7 @@ namespace TaskManager.Tests
             // Arrange
             var taskId = Guid.NewGuid();
             var invalidTask = new TaskItem { Title = "" };
-            _mockTaskService.Setup(s => s.UpdateAsync(taskId, invalidTask))
+            _mockTaskService.Setup(s => s.UpdateAsync(taskId, invalidTask, _testUserId))
                 .ThrowsAsync(new ArgumentException("Title is required"));
 
             // Act & Assert
@@ -213,14 +236,14 @@ namespace TaskManager.Tests
         {
             // Arrange
             var taskId = Guid.NewGuid();
-            _mockTaskService.Setup(s => s.DeleteAsync(taskId)).Returns(Task.CompletedTask);
+            _mockTaskService.Setup(s => s.DeleteAsync(taskId, _testUserId)).Returns(Task.CompletedTask);
 
             // Act
             var result = await _controller.Delete(taskId);
 
             // Assert
             result.Should().BeOfType<NoContentResult>();
-            _mockTaskService.Verify(s => s.DeleteAsync(taskId), Times.Once);
+            _mockTaskService.Verify(s => s.DeleteAsync(taskId, _testUserId), Times.Once);
         }
 
         [Fact]
@@ -228,7 +251,7 @@ namespace TaskManager.Tests
         {
             // Arrange
             var taskId = Guid.NewGuid();
-            _mockTaskService.Setup(s => s.DeleteAsync(taskId)).Returns(Task.CompletedTask);
+            _mockTaskService.Setup(s => s.DeleteAsync(taskId, _testUserId)).Returns(Task.CompletedTask);
 
             // Act
             var result = await _controller.Delete(taskId);
@@ -250,9 +273,10 @@ namespace TaskManager.Tests
                 Id = taskId,
                 Title = "Test Task",
                 Status = newStatus,
-                Priority = TaskItemPriority.Medium
+                Priority = TaskItemPriority.Medium,
+                UserId = _testUserId
             };
-            _mockTaskService.Setup(s => s.SetStatusAsync(taskId, newStatus)).ReturnsAsync(updatedTask);
+            _mockTaskService.Setup(s => s.SetStatusAsync(taskId, newStatus, _testUserId)).ReturnsAsync(updatedTask);
 
             // Act
             var result = await _controller.SetStatus(taskId, newStatus);
@@ -261,7 +285,7 @@ namespace TaskManager.Tests
             result.Result.Should().BeOfType<OkObjectResult>();
             var okResult = result.Result as OkObjectResult;
             okResult?.Value.Should().Be(updatedTask);
-            _mockTaskService.Verify(s => s.SetStatusAsync(taskId, newStatus), Times.Once);
+            _mockTaskService.Verify(s => s.SetStatusAsync(taskId, newStatus, _testUserId), Times.Once);
         }
 
         [Fact]
@@ -274,8 +298,8 @@ namespace TaskManager.Tests
 
             foreach (var status in statuses)
             {
-                _mockTaskService.Setup(s => s.SetStatusAsync(taskId, status))
-                    .ReturnsAsync(new TaskItem { Id = taskId, Status = status, Title = "Task" });
+                _mockTaskService.Setup(s => s.SetStatusAsync(taskId, status, _testUserId))
+                    .ReturnsAsync(new TaskItem { Id = taskId, Status = status, Title = "Task", UserId = _testUserId });
             }
 
             // Act & Assert
@@ -294,7 +318,7 @@ namespace TaskManager.Tests
             // Arrange
             var taskId = Guid.NewGuid();
             var newStatus = TaskItemStatus.Done;
-            _mockTaskService.Setup(s => s.SetStatusAsync(taskId, newStatus))
+            _mockTaskService.Setup(s => s.SetStatusAsync(taskId, newStatus, _testUserId))
                 .ThrowsAsync(new KeyNotFoundException("Task not found"));
 
             // Act
@@ -312,8 +336,8 @@ namespace TaskManager.Tests
         {
             // Arrange
             var taskId = Guid.NewGuid();
-            var updatedTask = new TaskItem { Id = taskId, Title = "Task", Status = status };
-            _mockTaskService.Setup(s => s.SetStatusAsync(taskId, status)).ReturnsAsync(updatedTask);
+            var updatedTask = new TaskItem { Id = taskId, Title = "Task", Status = status, UserId = _testUserId };
+            _mockTaskService.Setup(s => s.SetStatusAsync(taskId, status, _testUserId)).ReturnsAsync(updatedTask);
 
             // Act
             var result = await _controller.SetStatus(taskId, status);
@@ -324,3 +348,4 @@ namespace TaskManager.Tests
         #endregion
     }
 }
+

@@ -12,5 +12,9 @@ namespace TaskManager.Api.Repositories
         Task<TaskItem> AddAsync(TaskItem task);
         Task UpdateAsync(TaskItem task);
         Task DeleteAsync(Guid id);
+        
+        // New methods for ownership filtering
+        Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId);
+        Task<TaskItem?> GetByIdAsync(Guid id, Guid userId);
     }
 }

@@ -30,5 +30,9 @@ namespace TaskManager.Api.Models
         public TaskItemStatus Status { get; set; } = TaskItemStatus.Todo;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        
+        // Ownership
+        public Guid UserId { get; set; }
+        public User? User { get; set; }
     }
 }

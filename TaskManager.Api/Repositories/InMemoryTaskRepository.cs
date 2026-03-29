@@ -43,5 +43,18 @@ namespace TaskManager.Api.Repositories
             _store.TryRemove(id, out _);
             return Task.CompletedTask;
         }
+
+        public Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId)
+        {
+            return Task.FromResult(_store.Values.Where(t => t.UserId == userId).AsEnumerable());
+        }
+
+        public Task<TaskItem?> GetByIdAsync(Guid id, Guid userId)
+        {
+            _store.TryGetValue(id, out var task);
+            if (task != null && task.UserId != userId)
+                return Task.FromResult<TaskItem?>(null);
+            return Task.FromResult(task);
+        }
     }
 }

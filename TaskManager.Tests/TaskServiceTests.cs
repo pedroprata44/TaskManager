@@ -14,6 +14,8 @@ namespace TaskManager.Tests
 {
     public class TaskServiceTests
     {
+        private readonly Guid _defaultUserId = Guid.NewGuid();
+
         [Fact]
         public async Task GetAll_WhenNoTasks_ReturnsEmptyCollection()
         {
@@ -31,7 +33,7 @@ namespace TaskManager.Tests
             var repository = GetRepository();
             var service = new TaskService(repository);
 
-            var task = new TaskItem { Title = "Existente" };
+            var task = new TaskItem { Title = "Existente", UserId = _defaultUserId };
             var created = await service.CreateAsync(task);
 
             var found = await service.GetByIdAsync(created.Id);
@@ -63,7 +65,8 @@ namespace TaskManager.Tests
                 Title = "Teste TDD",
                 Description = "Escrever primeiro teste",
                 DueDate = DateTime.UtcNow.AddDays(3),
-                Priority = TaskItemPriority.High
+                Priority = TaskItemPriority.High,
+                UserId = _defaultUserId
             };
 
             var created = await service.CreateAsync(task);
@@ -85,7 +88,7 @@ namespace TaskManager.Tests
             var repository = GetRepository();
             var service = new TaskService(repository);
 
-            var task = new TaskItem { Title = invalidTitle };
+            var task = new TaskItem { Title = invalidTitle, UserId = _defaultUserId };
 
             await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(task));
         }
@@ -101,7 +104,8 @@ namespace TaskManager.Tests
                 Title = "Original",
                 Description = "Desc",
                 DueDate = DateTime.UtcNow.AddDays(2),
-                Priority = TaskItemPriority.Low
+                Priority = TaskItemPriority.Low,
+                UserId = _defaultUserId
             };
 
             var created = await service.CreateAsync(original);
@@ -113,7 +117,8 @@ namespace TaskManager.Tests
                 Description = "Updated Desc",
                 DueDate = dueDate,
                 Priority = TaskItemPriority.High,
-                Status = TaskItemStatus.InProgress
+                Status = TaskItemStatus.InProgress,
+                UserId = _defaultUserId
             };
 
             var updated = await service.UpdateAsync(created.Id, update);
@@ -132,7 +137,7 @@ namespace TaskManager.Tests
             var repository = GetRepository();
             var service = new TaskService(repository);
 
-            var task = new TaskItem { Title = "DoesNotMatter" };
+            var task = new TaskItem { Title = "DoesNotMatter", UserId = _defaultUserId };
 
             await Assert.ThrowsAsync<KeyNotFoundException>(() => service.UpdateAsync(Guid.NewGuid(), task));
         }
@@ -143,9 +148,9 @@ namespace TaskManager.Tests
             var repository = GetRepository();
             var service = new TaskService(repository);
 
-            var created = await service.CreateAsync(new TaskItem { Title = "Valid" });
+            var created = await service.CreateAsync(new TaskItem { Title = "Valid", UserId = _defaultUserId });
 
-            var update = new TaskItem { Title = "" };
+            var update = new TaskItem { Title = "", UserId = _defaultUserId };
 
             await Assert.ThrowsAsync<ArgumentException>(() => service.UpdateAsync(created.Id, update));
         }
@@ -156,7 +161,7 @@ namespace TaskManager.Tests
             var repository = GetRepository();
             var service = new TaskService(repository);
 
-            var created = await service.CreateAsync(new TaskItem { Title = "ToDelete" });
+            var created = await service.CreateAsync(new TaskItem { Title = "ToDelete", UserId = _defaultUserId });
             await service.DeleteAsync(created.Id);
 
             var found = await service.GetByIdAsync(created.Id);
@@ -179,7 +184,7 @@ namespace TaskManager.Tests
             var repository = GetRepository();
             var service = new TaskService(repository);
 
-            var created = await service.CreateAsync(new TaskItem { Title = "StatusTask" });
+            var created = await service.CreateAsync(new TaskItem { Title = "StatusTask", UserId = _defaultUserId });
 
             var updated = await service.SetStatusAsync(created.Id, TaskItemStatus.Done);
 
@@ -208,6 +213,20 @@ namespace TaskManager.Tests
                 .Options;
             var context = new TaskDbContext(options);
             context.Database.EnsureCreated();
+            
+            // Create default test user to avoid FK constraints
+            var user = new User
+            {
+                Id = _defaultUserId,
+                Email = "test@example.com",
+                Username = "testuser",
+                PasswordHash = "hash",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            context.Users.Add(user);
+            context.SaveChanges();
+            
             return new EfTaskRepository(context);
         }
     }

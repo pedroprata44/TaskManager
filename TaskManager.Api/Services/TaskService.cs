@@ -24,6 +24,9 @@ namespace TaskManager.Api.Services
             if (string.IsNullOrWhiteSpace(task.Title))
                 throw new ArgumentException("Title is required", nameof(task.Title));
 
+            if (task.UserId == Guid.Empty)
+                throw new ArgumentException("UserId is required", nameof(task.UserId));
+
             task.Status = TaskItemStatus.Todo;
 
             return await _repository.AddAsync(task);
@@ -55,6 +58,56 @@ namespace TaskManager.Api.Services
             var task = await _repository.GetByIdAsync(id);
             if (task is null)
                 throw new KeyNotFoundException("Task not found");
+
+            task.Status = status;
+            await _repository.UpdateAsync(task);
+            return task;
+        }
+
+        // New methods with userId (ownership validation)
+        public Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId) => _repository.GetAllAsync(userId);
+
+        public async Task<TaskItem?> GetByIdAsync(Guid id, Guid userId)
+        {
+            var task = await _repository.GetByIdAsync(id, userId);
+            if (task is null)
+                throw new UnauthorizedAccessException("Not authorized to access this task");
+            return task;
+        }
+
+        public async Task<TaskItem> UpdateAsync(Guid id, TaskItem task, Guid userId)
+        {
+            var existing = await _repository.GetByIdAsync(id, userId);
+            if (existing is null)
+                throw new UnauthorizedAccessException("Not authorized to update this task");
+
+            if (string.IsNullOrWhiteSpace(task.Title))
+                throw new ArgumentException("Title is required", nameof(task.Title));
+
+            existing.Title = task.Title;
+            existing.Description = task.Description;
+            existing.DueDate = task.DueDate;
+            existing.Priority = task.Priority;
+            existing.Status = task.Status;
+
+            await _repository.UpdateAsync(existing);
+            return existing;
+        }
+
+        public async Task DeleteAsync(Guid id, Guid userId)
+        {
+            var existing = await _repository.GetByIdAsync(id, userId);
+            if (existing is null)
+                throw new UnauthorizedAccessException("Not authorized to delete this task");
+
+            await _repository.DeleteAsync(id);
+        }
+
+        public async Task<TaskItem> SetStatusAsync(Guid id, TaskItemStatus status, Guid userId)
+        {
+            var task = await _repository.GetByIdAsync(id, userId);
+            if (task is null)
+                throw new UnauthorizedAccessException("Not authorized to update this task");
 
             task.Status = status;
             await _repository.UpdateAsync(task);

@@ -57,4 +57,14 @@ public class EfTaskRepository : ITaskRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId)
+    {
+        return await _context.Tasks.Where(t => t.UserId == userId).ToListAsync();
+    }
+
+    public async Task<TaskItem?> GetByIdAsync(Guid id, Guid userId)
+    {
+        return await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+    }
 }

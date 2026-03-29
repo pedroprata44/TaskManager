@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using TaskManager.Api.Models;
+using TaskManager.Api.Services;
 
 namespace TaskManager.Api.Controllers
 {
@@ -11,45 +8,61 @@ namespace TaskManager.Api.Controllers
     [Route("api/auth")]
     public class AuthController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
+        private readonly IAuthService _authService;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IAuthService authService)
         {
-            _configuration = configuration;
+            _authService = authService;
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest? request)
+        {
+            if (request == null)
+                return BadRequest("Request cannot be null");
+
+            try
+            {
+                var result = await _authService.RegisterAsync(request.Email, request.Username, request.Password);
+                return CreatedAtAction(nameof(Login), result);
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest("Invalid input data");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return StatusCode(500, "An unexpected error occurred");
+            }
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest? request)
         {
-            // Simple authentication - in production, validate against database
-            if (request.Username == "admin" && request.Password == "password")
+            if (request == null)
+                return BadRequest("Request cannot be null");
+
+            try
             {
-                var token = GenerateJwtToken(request.Username);
-                return Ok(new { Token = token });
+                var result = await _authService.LoginAsync(request.Username, request.Password);
+                return Ok(result);
             }
-
-            return Unauthorized("Invalid credentials");
-        }
-
-        private string GenerateJwtToken(string username)
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
+            catch (ArgumentException)
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddHours(1),
-                signingCredentials: creds);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+                return BadRequest("Invalid input data");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized("Invalid credentials");
+            }
+            catch
+            {
+                return StatusCode(500, "An unexpected error occurred");
+            }
         }
     }
 }

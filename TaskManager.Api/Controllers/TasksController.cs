@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TaskManager.Api.Models;
@@ -19,23 +20,47 @@ namespace TaskManager.Api.Controllers
             _taskService = taskService;
         }
 
+        /// <summary>
+        /// Extrai o ID do usuário do JWT token através do claim NameIdentifier
+        /// </summary>
+        private Guid GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                throw new InvalidOperationException("Unable to extract user ID from JWT token");
+            }
+            return userId;
+        }
+
         [HttpGet]
-        public async Task<IEnumerable<TaskItem>> GetAll() => await _taskService.GetAllAsync();
+        public async Task<IEnumerable<TaskItem>> GetAll()
+        {
+            var userId = GetCurrentUserId();
+            return await _taskService.GetAllAsync(userId);
+        }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<TaskItem>> GetById(Guid id)
         {
-            var task = await _taskService.GetByIdAsync(id);
-            if (task is null)
+            try
+            {
+                var userId = GetCurrentUserId();
+                var task = await _taskService.GetByIdAsync(id, userId);
+                return Ok(task);
+            }
+            catch (UnauthorizedAccessException)
+            {
                 return NotFound();
-
-            return Ok(task);
+            }
         }
 
         [HttpPost]
         [Authorize]
         public async Task<ActionResult<TaskItem>> Create([FromBody] TaskItem task)
         {
+            var userId = GetCurrentUserId();
+            task.UserId = userId;
             var created = await _taskService.CreateAsync(task);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
@@ -46,8 +71,13 @@ namespace TaskManager.Api.Controllers
         {
             try
             {
-                var updated = await _taskService.UpdateAsync(id, task);
+                var userId = GetCurrentUserId();
+                var updated = await _taskService.UpdateAsync(id, task, userId);
                 return Ok(updated);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
             }
             catch (KeyNotFoundException)
             {
@@ -59,8 +89,16 @@ namespace TaskManager.Api.Controllers
         [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
-            await _taskService.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                var userId = GetCurrentUserId();
+                await _taskService.DeleteAsync(id, userId);
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
         }
 
         [HttpPatch("{id}/status")]
@@ -69,8 +107,13 @@ namespace TaskManager.Api.Controllers
         {
             try
             {
-                var updated = await _taskService.SetStatusAsync(id, status);
+                var userId = GetCurrentUserId();
+                var updated = await _taskService.SetStatusAsync(id, status, userId);
                 return Ok(updated);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
             }
             catch (KeyNotFoundException)
             {
