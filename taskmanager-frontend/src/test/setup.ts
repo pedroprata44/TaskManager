@@ -1,11 +1,16 @@
 import '@testing-library/jest-dom'
-import { expect, afterAll, afterEach, beforeAll, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import { server } from './mocks/server'
 
 // MSW Setup
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
+
+// Clear mocks before each test
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 // Mock localStorage
 const localStorageMock = (() => {

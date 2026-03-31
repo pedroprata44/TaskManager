@@ -7,7 +7,7 @@ export const handlers = [
   // Auth endpoints
   http.post(`${API_BASE_URL}/auth/login`, async ({ request }) => {
     const body = await request.json() as { username: string; password: string }
-    
+
     if (body.username === 'validuser' && body.password === 'password123') {
       return HttpResponse.json({
         token: 'mock-jwt-token-123',
@@ -27,10 +27,10 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/auth/register`, async ({ request }) => {
-    const body = await request.json() as { 
+    const body = await request.json() as {
       email: string
       username: string
-      password: string 
+      password: string
     }
 
     if (body.username === 'existinguser') {

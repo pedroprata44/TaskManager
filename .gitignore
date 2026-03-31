@@ -73,6 +73,9 @@ taskmanager-frontend/node_modules/
 taskmanager-frontend/dist/
 taskmanager-frontend/build/
 taskmanager-frontend/.turbo/
+*.tsbuildinfo
+*.tsbuildconfig.js
+vite.config.d.ts
 
 # Build output
 dist/
