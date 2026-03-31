@@ -69,6 +69,10 @@ frontend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/.turbo/
+taskmanager-frontend/node_modules/
+taskmanager-frontend/dist/
+taskmanager-frontend/build/
+taskmanager-frontend/.turbo/
 
 # Build output
 dist/
