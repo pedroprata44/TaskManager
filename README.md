@@ -8,16 +8,7 @@ A modern full-stack task management application with ASP.NET Core 10.0 backend a
 
 **Pré-requisitos:** .NET 10 e Node.js 18+
 
-### Opção 1: Script Automático
-```bash
-# macOS / Linux
-bash setup-local.sh
-
-# Windows
-setup-local.bat
-```
-
-### Opção 2: Manual
+### Init
 ```bash
 # Backend
 cd TaskManager/TaskManager.Api
@@ -30,11 +21,6 @@ cd TaskManager/taskmanager-frontend
 npm install
 npm run dev
 ```
-
-**Acesse**: http://localhost:5173  
-**Créditos**: `testuser` / `Test@1234`
-
----
 
 ## Features
 
