@@ -32,9 +32,9 @@ export interface TaskItem {
 }
 
 export enum TaskStatus {
-  Pending = 'Pending',
+  Todo = 'Todo',
   InProgress = 'InProgress',
-  Completed = 'Completed'
+  Done = 'Done'
 }
 
 export interface CreateTaskRequest {

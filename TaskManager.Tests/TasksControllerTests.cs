@@ -124,7 +124,7 @@ namespace TaskManager.Tests
         public async Task Create_WithValidTask_ReturnsCreatedAtAction()
         {
             // Arrange
-            var newTask = new TaskItem
+            var newTask = new CreateTaskRequest
             {
                 Title = "New Task",
                 Description = "New Description",
@@ -158,8 +158,8 @@ namespace TaskManager.Tests
         public async Task Create_WithInvalidTitle_ThrowsArgumentException()
         {
             // Arrange
-            var invalidTask = new TaskItem { Title = "" };
-            _mockTaskService.Setup(s => s.CreateAsync(invalidTask))
+            var invalidTask = new CreateTaskRequest { Title = "" };
+            _mockTaskService.Setup(s => s.CreateAsync(It.IsAny<TaskItem>()))
                 .ThrowsAsync(new ArgumentException("Title is required"));
 
             // Act & Assert

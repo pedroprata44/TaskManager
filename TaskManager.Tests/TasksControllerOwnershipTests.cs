@@ -139,7 +139,7 @@ namespace TaskManager.Tests
         public async Task Create_SetsUserIdFromJwt_ReturnsCreatedAtAction()
         {
             // Arrange
-            var newTask = new TaskItem
+            var newTask = new CreateTaskRequest
             {
                 Title = "New Task",
                 Description = "New Description"
@@ -173,10 +173,10 @@ namespace TaskManager.Tests
         {
             // Arrange
             var clientProvidedUserId = Guid.NewGuid(); // Different user ID from client
-            var newTask = new TaskItem
+            var newTask = new CreateTaskRequest
             {
-                Title = "Task",
-                UserId = clientProvidedUserId  // Client tries to set different userId
+                Title = "Task"
+                // Client can't set UserId in CreateTaskRequest, it's from JWT
             };
             var createdTask = new TaskItem
             {

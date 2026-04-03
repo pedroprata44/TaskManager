@@ -28,7 +28,7 @@ describe('Dashboard Page', () => {
           id: 'task-1',
           title: 'Task 1',
           description: 'Description 1',
-          status: TaskStatus.Pending,
+          status: TaskStatus.Todo,
           userId: 'user-1',
           createdAt: new Date().toISOString(),
         },

@@ -57,10 +57,21 @@ namespace TaskManager.Api.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<TaskItem>> Create([FromBody] TaskItem task)
+        public async Task<ActionResult<TaskItem>> Create([FromBody] CreateTaskRequest request)
         {
             var userId = GetCurrentUserId();
-            task.UserId = userId;
+            var task = new TaskItem
+            {
+                Id = Guid.NewGuid(),
+                Title = request.Title,
+                Description = request.Description,
+                Status = request.Status,
+                Priority = request.Priority,
+                DueDate = request.DueDate,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
             var created = await _taskService.CreateAsync(task);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }

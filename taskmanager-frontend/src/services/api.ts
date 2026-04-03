@@ -17,7 +17,6 @@ class ApiClient {
   constructor() {
     this.axiosInstance = axios.create({
       baseURL: API_BASE_URL,
-      withCredentials: true,
     });
 
     // Interceptor para adicionar token JWT em todas as requisições

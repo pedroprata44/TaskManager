@@ -27,7 +27,7 @@ export const apiClientMock = {
       id: 'task-1',
       title: 'Task 1',
       description: 'Description 1',
-      status: TaskStatus.Pending,
+      status: TaskStatus.Todo,
       userId: 'user-1',
       createdAt: new Date().toISOString(),
     },
@@ -40,30 +40,30 @@ export const apiClientMock = {
       createdAt: new Date().toISOString(),
     },
   ]),
-  
+
   getTask: vi.fn(async (id: string): Promise<TaskItem> => ({
     id,
     title: 'Task 1',
     description: 'Description 1',
-    status: TaskStatus.Pending,
+    status: TaskStatus.Todo,
     userId: 'user-1',
     createdAt: new Date().toISOString(),
   })),
-  
+
   createTask: vi.fn(async (payload: any): Promise<TaskItem> => ({
     id: 'task-new',
     title: payload.title,
     description: payload.description || '',
-    status: payload.status || TaskStatus.Pending,
+    status: payload.status || TaskStatus.Todo,
     userId: 'user-1',
     createdAt: new Date().toISOString(),
   })),
-  
+
   updateTask: vi.fn(async (id: string, payload: any): Promise<TaskItem> => ({
     id,
     title: payload.title || 'Task 1',
     description: payload.description || 'Description 1',
-    status: TaskStatus.Pending,
+    status: TaskStatus.Todo,
     userId: 'user-1',
     createdAt: new Date().toISOString(),
   })),
