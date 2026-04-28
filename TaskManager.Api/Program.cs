@@ -25,9 +25,9 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-app.MapGet("/tasks", (ITaskService taskService) => Results.Ok(taskService.GetAll()));
+app.MapGet("/task/getall", (ITaskService taskService) => Results.Ok(taskService.GetAll()));
 
-app.MapGet("/tasks/{id}", (Guid id, ITaskService taskService) =>
+app.MapGet("/task/get/{id}", (Guid id, ITaskService taskService) =>
 {
     try
     {
@@ -39,13 +39,13 @@ app.MapGet("/tasks/{id}", (Guid id, ITaskService taskService) =>
     }
 });
 
-app.MapPost("/tasks", (TaskModel task, ITaskService taskService) =>
+app.MapPost("/task/create", (TaskModel task, ITaskService taskService) =>
 {
     taskService.Create(task);
-    return Results.Created($"/tasks/{task.Id}", task);
+    return Results.Created($"/task/get/{task.Id}", task);
 });
 
-app.MapPut("/tasks/{id}", (Guid id, TaskModel task, ITaskService taskService) =>
+app.MapPut("/task/update/{id}", (Guid id, TaskModel task, ITaskService taskService) =>
 {
     if (id != task.Id)
     {
@@ -63,7 +63,7 @@ app.MapPut("/tasks/{id}", (Guid id, TaskModel task, ITaskService taskService) =>
     }
 });
 
-app.MapDelete("/tasks/{id}", (Guid id, ITaskService taskService) =>
+app.MapDelete("/task/delete/{id}", (Guid id, ITaskService taskService) =>
 {
     try
     {
@@ -80,3 +80,5 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.Run();
+
+public partial class Program { }

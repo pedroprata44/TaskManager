@@ -10,8 +10,8 @@ public class TaskDtoTests
     {
         var dto = new TaskDto
         {
-            Title = "Test title",
-            Description = "Test description",
+            Title = CreateRandomValue("Title"),
+            Description = CreateRandomValue("Description"),
             IsCompleted = true
         };
 
@@ -37,5 +37,10 @@ public class TaskDtoTests
         Assert.False(isValid);
         Assert.Contains(validationResults, result => result.MemberNames.Contains("Title"));
         Assert.Contains(validationResults, result => result.MemberNames.Contains("Description"));
+    }
+
+    private static string CreateRandomValue(string prefix)
+    {
+        return $"{prefix}-{Guid.NewGuid():N}";
     }
 }
