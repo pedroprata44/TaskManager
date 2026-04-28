@@ -13,6 +13,8 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 build/
+obj/
+**/obj/
 
 # Visual Studio Code
 .vscode/
