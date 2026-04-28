@@ -1,8 +1,8 @@
 namespace TaskManager.Api.Models;
 
-public sealed class Task
+public sealed class TaskModel
 {
-    public Task()
+    public TaskModel()
     {
         CreatedAt = UpdatedAt = DateTime.UtcNow;
     }

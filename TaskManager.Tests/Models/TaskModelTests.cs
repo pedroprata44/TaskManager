@@ -1,8 +1,8 @@
-using TaskModel = TaskManager.Api.Models.Task;
+using TaskModel = TaskManager.Api.Models.TaskModel;
 
 namespace TaskManager.Tests.Models;
 
-public class TaskTests
+public class TaskModelTests
 {
     [Fact]
     public void Task_DefaultValues_AreInitializedCorrectly()
