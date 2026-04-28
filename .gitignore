@@ -1,0 +1,67 @@
+# .NET / Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug*/
+[Rr]elease*/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+build/
+
+# Visual Studio Code
+.vscode/
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+packages/
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/**
+!**/[Pp]ackages/repositories.config
+*.swp
+
+# Dotnet CLI
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Microsoft Azure Web App publish settings
+*.Publish.xml
+
+# User-specific files
+*.[Cc]ache
+*.[Dd]ebugInfo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Test results
+TestResults/
+
+# Resharper
+_ReSharper*
+*.DotSettings.user
+
+# Rider
+.idea*
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Profile:
+*.vcxproj.user
+*.csproj.user
+*.pidb
+*.svclog
+
+# End of https://www.toptal.com/developers/gitignore/api/dotnet
