@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using TaskManager.Api.Data;
 using TaskManager.Api.Interfaces.Repositories;
 using TaskManager.Api.Models;
 using TaskModel = TaskManager.Api.Models.TaskModel;
@@ -6,7 +8,12 @@ namespace TaskManager.Api.Repositories;
 
 public sealed class TaskRepository : ITaskRepository
 {
-    private readonly List<TaskModel> _tasks = new();
+    private readonly TaskDbContext _context;
+
+    public TaskRepository(TaskDbContext context)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+    }
 
     public void Create(TaskModel task)
     {
@@ -18,14 +25,18 @@ public sealed class TaskRepository : ITaskRepository
         task.CreatedAt = DateTime.UtcNow;
         task.UpdatedAt = DateTime.UtcNow;
 
-        _tasks.Add(task);
+        _context.Tasks.Add(task);
+        _context.SaveChanges();
     }
 
-    public IEnumerable<TaskModel> GetAll() => _tasks.ToList();
+    public IEnumerable<TaskModel> GetAll()
+    {
+        return _context.Tasks.AsNoTracking().ToList();
+    }
 
     public TaskModel GetById(Guid id)
     {
-        var task = _tasks.FirstOrDefault(task => task.Id == id);
+        var task = _context.Tasks.Find(id);
         if (task is null)
         {
             throw new KeyNotFoundException($"Task with id '{id}' was not found.");
@@ -36,19 +47,21 @@ public sealed class TaskRepository : ITaskRepository
 
     public void Update(TaskModel task)
     {
-        var index = _tasks.FindIndex(existing => existing.Id == task.Id);
-        if (index < 0)
+        var exists = _context.Tasks.Any(existing => existing.Id == task.Id);
+        if (!exists)
         {
             throw new KeyNotFoundException($"Task with id '{task.Id}' was not found.");
         }
 
         task.UpdatedAt = DateTime.UtcNow;
-        _tasks[index] = task;
+        _context.Tasks.Update(task);
+        _context.SaveChanges();
     }
 
     public void Delete(Guid id)
     {
         var task = GetById(id);
-        _tasks.Remove(task);
+        _context.Tasks.Remove(task);
+        _context.SaveChanges();
     }
 }
