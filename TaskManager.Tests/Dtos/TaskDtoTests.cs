@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using TaskManager.Api.Dtos;
 
-namespace TaskManager.Tests;
+namespace TaskManager.Tests.Dtos;
 
 public class TaskDtoTests
 {

@@ -1,6 +1,6 @@
 using TaskModel = TaskManager.Api.Models.Task;
 
-namespace TaskManager.Tests;
+namespace TaskManager.Tests.Models;
 
 public class TaskTests
 {
