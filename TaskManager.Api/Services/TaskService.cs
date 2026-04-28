@@ -1,53 +1,30 @@
+using TaskManager.Api.Interfaces.Repositories;
+using TaskManager.Api.Interfaces.Services;
 using TaskManager.Api.Models;
+using TaskManager.Api.Repositories;
 using TaskModel = TaskManager.Api.Models.TaskModel;
 
 namespace TaskManager.Api.Services;
 
 public sealed class TaskService : ITaskService
 {
-    private readonly List<TaskModel> _tasks = new();
+    private readonly ITaskRepository _repository;
+
+    public TaskService(ITaskRepository repository)
+    {
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+    }
 
     public void Create(TaskModel task)
     {
-        if (task.Id == Guid.Empty)
-        {
-            task.Id = Guid.NewGuid();
-        }
-
-        task.CreatedAt = DateTime.UtcNow;
-        task.UpdatedAt = DateTime.UtcNow;
-
-        _tasks.Add(task);
+        _repository.Create(task);
     }
 
-    public IEnumerable<TaskModel> GetAll() => _tasks.ToList();
+    public IEnumerable<TaskModel> GetAll() => _repository.GetAll();
 
-    public TaskModel GetById(Guid id)
-    {
-        var task = _tasks.FirstOrDefault(task => task.Id == id);
-        if (task is null)
-        {
-            throw new KeyNotFoundException($"Task with id '{id}' was not found.");
-        }
+    public TaskModel GetById(Guid id) => _repository.GetById(id);
 
-        return task;
-    }
+    public void Update(TaskModel task) => _repository.Update(task);
 
-    public void Update(TaskModel task)
-    {
-        var index = _tasks.FindIndex(existing => existing.Id == task.Id);
-        if (index < 0)
-        {
-            throw new KeyNotFoundException($"Task with id '{task.Id}' was not found.");
-        }
-
-        task.UpdatedAt = DateTime.UtcNow;
-        _tasks[index] = task;
-    }
-
-    public void Delete(Guid id)
-    {
-        var task = GetById(id);
-        _tasks.Remove(task);
-    }
+    public void Delete(Guid id) => _repository.Delete(id);
 }
