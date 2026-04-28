@@ -7,7 +7,7 @@ public interface ITaskService
 {
     void Create(TaskModel task);
     IEnumerable<TaskModel> GetAll();
-    TaskModel? GetById(Guid id);
+    TaskModel GetById(Guid id);
     void Update(TaskModel task);
     void Delete(Guid id);
 }

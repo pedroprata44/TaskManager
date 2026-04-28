@@ -22,14 +22,23 @@ public sealed class TaskService : ITaskService
 
     public IEnumerable<TaskModel> GetAll() => _tasks.ToList();
 
-    public TaskModel? GetById(Guid id) => _tasks.FirstOrDefault(task => task.Id == id);
+    public TaskModel GetById(Guid id)
+    {
+        var task = _tasks.FirstOrDefault(task => task.Id == id);
+        if (task is null)
+        {
+            throw new KeyNotFoundException($"Task with id '{id}' was not found.");
+        }
+
+        return task;
+    }
 
     public void Update(TaskModel task)
     {
         var index = _tasks.FindIndex(existing => existing.Id == task.Id);
         if (index < 0)
         {
-            return;
+            throw new KeyNotFoundException($"Task with id '{task.Id}' was not found.");
         }
 
         task.UpdatedAt = DateTime.UtcNow;
@@ -39,9 +48,6 @@ public sealed class TaskService : ITaskService
     public void Delete(Guid id)
     {
         var task = GetById(id);
-        if (task is not null)
-        {
-            _tasks.Remove(task);
-        }
+        _tasks.Remove(task);
     }
 }

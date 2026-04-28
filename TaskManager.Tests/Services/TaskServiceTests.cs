@@ -65,23 +65,19 @@ public class TaskServiceTests
         service.Create(task);
         service.Delete(task.Id);
 
-        var deleted = service.GetById(task.Id);
-
-        Assert.Null(deleted);
+        Assert.Throws<KeyNotFoundException>(() => service.GetById(task.Id));
     }
 
     [Fact]
-    public void GetById_NonExistingId_ReturnsNull()
+    public void GetById_NonExistingId_ThrowsKeyNotFoundException()
     {
         ITaskService service = new TaskService();
 
-        var result = service.GetById(Guid.NewGuid());
-
-        Assert.Null(result);
+        Assert.Throws<KeyNotFoundException>(() => service.GetById(Guid.NewGuid()));
     }
 
     [Fact]
-    public void UpdateTask_NonExistingTask_DoesNotCreateOrUpdate()
+    public void UpdateTask_NonExistingTask_ThrowsKeyNotFoundException()
     {
         ITaskService service = new TaskService();
         var missingTask = new TaskModel
@@ -91,20 +87,19 @@ public class TaskServiceTests
             Description = $"No such task {Guid.NewGuid():N}"
         };
 
-        service.Update(missingTask);
-
-        Assert.Null(service.GetById(missingTask.Id));
+        Assert.Throws<KeyNotFoundException>(() => service.Update(missingTask));
         Assert.Empty(service.GetAll());
     }
 
     [Fact]
-    public void DeleteTask_NonExistingId_DoesNotAffectExistingTasks()
+    public void DeleteTask_NonExistingId_ThrowsKeyNotFoundException()
     {
         ITaskService service = new TaskService();
         var task = CreateRandomTask("Present");
 
         service.Create(task);
-        service.Delete(Guid.NewGuid());
+
+        Assert.Throws<KeyNotFoundException>(() => service.Delete(Guid.NewGuid()));
 
         var allTasks = service.GetAll();
 
