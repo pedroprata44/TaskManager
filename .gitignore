@@ -61,6 +61,11 @@ _ReSharper*
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
+# Local SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
 # Profile:
 *.vcxproj.user
 *.csproj.user
