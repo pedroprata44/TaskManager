@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using TaskManager.Api.Data;
 using TaskManager.Api.Interfaces.Services;
 using TaskManager.Api.Repositories;
 using TaskManager.Api.Services;
@@ -5,17 +7,30 @@ using TaskModel = TaskManager.Api.Models.TaskModel;
 
 namespace TaskManager.Tests.Services;
 
-public class TaskServiceTests
+public class TaskServiceTests : IDisposable
 {
+    private readonly TaskDbContext _context;
+    private readonly ITaskService _service;
+
+    public TaskServiceTests()
+    {
+        _context = CreateContext();
+        _service = new TaskService(new TaskRepository(_context));
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
+
     [Fact]
     public void CreateTask_ShouldAddTask()
     {
-        ITaskService service = new TaskService(new TaskRepository());
         var task = CreateRandomTask("Create");
 
-        service.Create(task);
+        _service.Create(task);
 
-        var created = service.GetById(task.Id);
+        var created = _service.GetById(task.Id);
 
         Assert.NotEqual(Guid.Empty, task.Id);
         Assert.NotNull(created);
@@ -26,14 +41,13 @@ public class TaskServiceTests
     [Fact]
     public void GetAllTasks_ShouldReturnAllCreatedTasks()
     {
-        ITaskService service = new TaskService(new TaskRepository());
         var first = CreateRandomTask("First");
         var second = CreateRandomTask("Second");
 
-        service.Create(first);
-        service.Create(second);
+        _service.Create(first);
+        _service.Create(second);
 
-        var allTasks = service.GetAll();
+        var allTasks = _service.GetAll();
 
         Assert.Contains(allTasks, t => t.Id == first.Id);
         Assert.Contains(allTasks, t => t.Id == second.Id);
@@ -43,16 +57,15 @@ public class TaskServiceTests
     [Fact]
     public void UpdateTask_ShouldPersistChanges()
     {
-        ITaskService service = new TaskService(new TaskRepository());
         var task = CreateRandomTask("Original");
 
-        service.Create(task);
+        _service.Create(task);
 
         var updatedDescription = $"Updated-{Guid.NewGuid():N}";
         task.Description = updatedDescription;
-        service.Update(task);
+        _service.Update(task);
 
-        var updated = service.GetById(task.Id);
+        var updated = _service.GetById(task.Id);
 
         Assert.NotNull(updated);
         Assert.Equal(updatedDescription, updated.Description);
@@ -61,27 +74,23 @@ public class TaskServiceTests
     [Fact]
     public void DeleteTask_ShouldRemoveTask()
     {
-        ITaskService service = new TaskService(new TaskRepository());
         var task = CreateRandomTask("Delete");
 
-        service.Create(task);
-        service.Delete(task.Id);
+        _service.Create(task);
+        _service.Delete(task.Id);
 
-        Assert.Throws<KeyNotFoundException>(() => service.GetById(task.Id));
+        Assert.Throws<KeyNotFoundException>(() => _service.GetById(task.Id));
     }
 
     [Fact]
     public void GetById_NonExistingId_ThrowsKeyNotFoundException()
     {
-        ITaskService service = new TaskService(new TaskRepository());
-
-        Assert.Throws<KeyNotFoundException>(() => service.GetById(Guid.NewGuid()));
+        Assert.Throws<KeyNotFoundException>(() => _service.GetById(Guid.NewGuid()));
     }
 
     [Fact]
     public void UpdateTask_NonExistingTask_ThrowsKeyNotFoundException()
     {
-        ITaskService service = new TaskService(new TaskRepository());
         var missingTask = new TaskModel
         {
             Id = Guid.NewGuid(),
@@ -89,24 +98,32 @@ public class TaskServiceTests
             Description = $"No such task {Guid.NewGuid():N}"
         };
 
-        Assert.Throws<KeyNotFoundException>(() => service.Update(missingTask));
-        Assert.Empty(service.GetAll());
+        Assert.Throws<KeyNotFoundException>(() => _service.Update(missingTask));
+        Assert.Empty(_service.GetAll());
     }
 
     [Fact]
     public void DeleteTask_NonExistingId_ThrowsKeyNotFoundException()
     {
-        ITaskService service = new TaskService(new TaskRepository());
         var task = CreateRandomTask("Present");
 
-        service.Create(task);
+        _service.Create(task);
 
-        Assert.Throws<KeyNotFoundException>(() => service.Delete(Guid.NewGuid()));
+        Assert.Throws<KeyNotFoundException>(() => _service.Delete(Guid.NewGuid()));
 
-        var allTasks = service.GetAll();
+        var allTasks = _service.GetAll();
 
         Assert.Single(allTasks);
         Assert.Equal(task.Id, allTasks.Single().Id);
+    }
+
+    private static TaskDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<TaskDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        return new TaskDbContext(options);
     }
 
     private static TaskModel CreateRandomTask(string prefix)
