@@ -10,6 +10,8 @@ public class TaskModelTests
         var task = new TaskModel();
 
         Assert.NotEqual(Guid.Empty, task.Id);
+        Assert.Equal(Guid.Empty, task.UserId);
+        Assert.Null(task.User);
         Assert.Equal(string.Empty, task.Title);
         Assert.Equal(string.Empty, task.Description);
         Assert.False(task.IsCompleted);

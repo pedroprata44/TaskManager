@@ -10,6 +10,7 @@ public class TaskDtoTests
     {
         var dto = new TaskDto
         {
+            UserId = Guid.NewGuid(),
             Title = CreateRandomValue("Title"),
             Description = CreateRandomValue("Description"),
             IsCompleted = true
@@ -27,6 +28,7 @@ public class TaskDtoTests
     {
         var dto = new TaskDto
         {
+            UserId = null,
             Title = string.Empty,
             Description = string.Empty
         };
@@ -37,6 +39,7 @@ public class TaskDtoTests
         Assert.False(isValid);
         Assert.Contains(validationResults, result => result.MemberNames.Contains("Title"));
         Assert.Contains(validationResults, result => result.MemberNames.Contains("Description"));
+        Assert.Contains(validationResults, result => result.MemberNames.Contains("UserId"));
     }
 
     private static string CreateRandomValue(string prefix)

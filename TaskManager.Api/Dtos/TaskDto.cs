@@ -5,6 +5,9 @@ namespace TaskManager.Api.Dtos;
 public sealed class TaskDto
 {
     [Required]
+    public Guid? UserId { get; set; }
+
+    [Required]
     [MinLength(1)]
     public string Title { get; set; } = string.Empty;
 
